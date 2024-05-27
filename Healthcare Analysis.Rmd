@@ -1,0 +1,141 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+## Unlocking Data Driven Solutions for Healthcare Accessibility
+
+## A Case Study Nairobi County
+
+```{r}
+# importing the libraries
+library(tidyverse)
+library(readxl)
+```
+
+```{r}
+# importing the dataset
+data_set_1<- read_excel("C:/Users/user pc/Desktop/ALX Datathon/ehealth_1kenya_facilities.xlsx")
+View(data_set_1)
+
+```
+
+### Data Wrangling, Cleaning and EDA
+
+The case study is specifically for Nairobi so we can reduce the granularity of the data set to only Nairobi county
+
+```{r}
+# creating a dataset for Nairobi
+nairobi_df<- data_set_1%>%
+  filter(tolower(County)=="nairobi")
+view(nairobi_df)
+
+```
+
+Dropping the Province and the county columns since the dataset contains data pertaining Nairobi
+
+```{r}
+
+nairobi_df<- nairobi_df%>%
+  select(-Province,-County)
+view(nairobi_df)
+# obtaining size of the dataset
+dim(nairobi_df)
+```
+
+The dataset has 942 rows and 48 columns
+
+```{r}
+# analysing the attributes
+colnames(nairobi_df)
+# dropping columns with null values only
+nairobi_clean<- nairobi_df%>%
+  select(where(~ !all(is.na(.))))
+view(nairobi_clean)
+
+```
+
+```{r}
+# dropping missing entries.We need to get rid of the last 5 columns before getting dropping the missing values
+nairobi_clean<- nairobi_clean%>%
+  select(-tail(colnames(nairobi_clean),5))
+view(nairobi_clean)
+```
+
+The dataframe still has a lot of columns with missing values
+
+```{r}
+# selecting columns that are not relevant to our study
+colnames(nairobi_clean)
+columns_to_drop<- nairobi_clean[,14:23]
+view(columns_to_drop)
+# dropping the columns
+nairobi_clean<- nairobi_clean%>%
+  select(-(colnames(columns_to_drop)))
+view(nairobi_clean)
+```
+
+Notice that the bed column has hospitals with 0 beds, we can assume that these hospitals have no in- patient services and that those that have values greater than 1 offer both in-patient and outpatient services.
+
+```{r}
+
+# dropping our missing values
+nairobi_clean<- drop_na(nairobi_clean)
+dim(nairobi_clean)
+```
+
+We now have 524 entries with 16 columns. We can thus use this as a representative sample for healthcare in Nairobi county. Let's set the granularity of our data set to the constituency level.
+
+Fact Check✔️: Nairobi has 17 constituencies, let's check that from our dataset
+
+```{r}
+constituencies<-unique(nairobi_clean$Constituency)
+print(length(constituencies))
+```
+
+**😃Our dataset does have 17 constituencieswe can then further make our dataset easy to work with by using constituency as our location identifier**
+
+```{r}
+locations_to_drop<-nairobi_clean[,c(3,4,7,8,9,11)]
+# dropping all other location identifiers
+constituency_data<- nairobi_clean%>%
+  select(-colnames(locations_to_drop))
+view(constituency_data)
+dim(constituency_data) # has 524 entries
+```
+
+```{r}
+# checking for duplicate records using the unique identifier
+cleaned_data<- constituency_data%>%
+  distinct()
+dim(cleaned_data) # has the same dimensions as the constituency dataset hence no duplicate records.
+```
+
+#### Constituency Analysis
+
+We can group our new dataframe by the constituency column and summarise
+
+```{r}
+nairobi_grouped<- constituency_data%>%
+  group_by(Constituency)%>%
+  summarise(
+    healthcare_facilities=n(), # the number of healthcare facilities per constituency
+    total_beds= sum(Beds), # the total number of beds per constituency
+    total_cots = sum(Cots) # total number of cots per constituency
+  )
+View(nairobi_grouped)
+```
+
+Quick Insight💡:
+
+![](Hospital Summary.jpg)
+
+-    Starehe constituency has the highest number of healthcare facilities while Mathare constituency has the smallest number of healthcare facilities
+
+-   Lang'ata Constituency has the highest number of beds while Embakasi North has the smallest number of beds
+
+-   Kamukunji has the most cots while LANG'ATA,DAGORETTI NORTH,MATHARE,DAGORETTI SOUTH all have 0 cots, this is highly unlikely. We'd need to go check into this🤔
+
+```{r}
+
+```
