@@ -40,12 +40,12 @@ The data for this project was obtained from the **Kenya National Bureau of Stati
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/Kelvin-M-Njoki/data-challenge.git
+   git clone https://github.com/Kelvin-M-Njoki/data_challenge.git
    ```
 
 2. **Navigate to the project directory**:
    ```bash
-   cd data-challenge
+   cd data_challenge
    ```
 
 3. **Explore the data**:
